@@ -1,2 +1,2 @@
 # repository
-# GENEX_project
+# GENEXT_project
