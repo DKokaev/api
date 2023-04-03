@@ -5,7 +5,7 @@ import { IMethodsController } from './methods.controller.interface';
 import { BaseController } from '../../common/base.controller';
 import { NextFunction, Request, Response } from 'express';
 import { IService } from '../services/services.interfase';
-import { transConfirm } from '../database/db';
+// import { transConfirm } from '../database/db';
 
 @injectable()
 export class MethodsController extends BaseController implements IMethodsController {
@@ -57,28 +57,28 @@ export class MethodsController extends BaseController implements IMethodsControl
 			},
 		]);
 	}
-	async Main(req: Request, res: Response, netx: NextFunction): Promise<void> {
+	async Main(req: Request, res: Response, next: NextFunction): Promise<void> {
 		console.log('Run Main');
 		this.services.Main();
 	}
 
-	async Login(req: Request, res: Response, netx: NextFunction): Promise<void> {
+	async Login(req: Request, res: Response, next: NextFunction): Promise<void> {
 		console.log(req.body);
 		res.json(await this.services.Login(req.body));
 	}
 
-	async Currencies(req: Request, res: Response, netx: NextFunction): Promise<void> {
+	async Currencies(req: Request, res: Response, next: NextFunction): Promise<void> {
 		// this.services.Currencies();
 		res.json(await this.services.Currencies());
 	}
 
-	async Countries(req: Request, res: Response, netx: NextFunction): Promise<void> {
+	async Countries(req: Request, res: Response, next: NextFunction): Promise<void> {
 		// this.services.Countries();
 		res.json(await this.services.Countries());
 	}
 
 	// Создание запроса на платеж
-	async Pay(req: Request, res: Response, netx: NextFunction): Promise<any> {
+	async Pay(req: Request, res: Response, next: NextFunction): Promise<any> {
 		const data = {
 			data: [
 				{
@@ -99,19 +99,19 @@ export class MethodsController extends BaseController implements IMethodsControl
 	}
 
 	// Получение истории переводов
-	async TransList(req: Request, res: Response, netx: NextFunction): Promise<any> {
+	async TransList(req: Request, res: Response, next: NextFunction): Promise<any> {
 		// console.log(req.query);
 		const total = await this.services.TransList(Number(req.query.id));
 		res.json(total);
 	}
 
 	// Запрос на проверку статуса платежа
-	async CheckPayStatys(req: Request, res: Response, netx: NextFunction): Promise<any> {
+	async CheckPayStatys(req: Request, res: Response, next: NextFunction): Promise<any> {
 		res.send(await this.services.CheckPayStatys(req.body.id, req.body.UserId));
 	}
 
 	// Запрос на подтверждение перевода
-	async ConfirmPayStatus(req: Request, res: Response, netx: NextFunction): Promise<any> {
+	async ConfirmPayStatus(req: Request, res: Response, next: NextFunction): Promise<any> {
 		const data = {
 			data: [
 				{
