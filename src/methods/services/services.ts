@@ -30,7 +30,6 @@ export class Services implements IService {
 		console.log(await get_currencies());
 		return await get_currencies();
 	}
-
 	async Countries(): Promise<object> {
 		console.log(await get_countries());
 		return await get_countries();
