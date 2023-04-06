@@ -59,7 +59,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 	}
 	async Main(req: Request, res: Response, next: NextFunction): Promise<void> {
 		console.log('Run Main');
-		this.services.Main();
+		res.json(await this.services.Main());
 	}
 
 	async Login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -77,7 +77,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 		res.json(await this.services.Countries());
 	}
 
-	// Создание запроса на платеж
+	// // Создание запроса на платеж
 	async Pay(req: Request, res: Response, next: NextFunction): Promise<any> {
 		const data = {
 			data: [
@@ -92,10 +92,11 @@ export class MethodsController extends BaseController implements IMethodsControl
 				},
 			],
 		};
-		// const time = new Date().toLocaleDateString() + new Date().toLocaleTimeString();
-
+		const date_start: string = new Date().toISOString();
+		// console.log(req.body, date_start);
+		// res.json(req.body);
 		// console.log(time);
-		res.send(await this.services.Pay(req.body));
+		res.json(await this.services.Pay(req.body, date_start));
 	}
 
 	// Получение истории переводов

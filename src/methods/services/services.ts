@@ -17,13 +17,15 @@ export class Services implements IService {
 	constructor() {}
 
 	async Main(): Promise<object> {
-		console.log(await get_users());
+		// console.log(await get_users());
 		return await get_users();
 	}
 
 	async Login(body: any): Promise<any> {
-		console.log(await autorisation(body));
-		return await autorisation(body);
+		// console.log(await autorisation(body));
+		const date = new Date().toISOString();
+		console.log(date, typeof date);
+		return await autorisation(body, date);
 	}
 
 	async Currencies(): Promise<object> {
@@ -35,14 +37,15 @@ export class Services implements IService {
 		return await get_countries();
 	}
 
-	// Создание запроса на перевод
-	async Pay(body: any): Promise<any> {
-		// console.log(body);
-		return await operationSave(body);
+	// // Создание запроса на перевод
+	async Pay(body: any, date_start: string): Promise<any> {
+		console.log(body, date_start);
+		return await operationSave(body, date_start);
 	}
 
 	// Получение истории переводов
-	async TransList(id: number): Promise<object> {
+	async TransList(id: number): Promise<any> {
+		console.log(typeof id);
 		return await operationList(id);
 	}
 	// Проверка статуса платежа
