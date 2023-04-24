@@ -3,6 +3,7 @@ import { Server } from 'http';
 import { injectable, inject } from 'inversify';
 import { TYPES } from './TYPES';
 import { ILogger } from './logger/logger.interface';
+import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import 'reflect-metadata';
 import { IMethodsController } from './methods/controllers/methods.controller.interface';
@@ -23,6 +24,8 @@ export class App {
 		@inject(TYPES.ExeptionFilter) private exeptionFilter: IExeptionFilter,
 	) {
 		this.app = express();
+		this.app.use(fileUpload());
+		this.app.use(express.static('files'));
 		this.port = 8080;
 		this.host = '192.168.0.45';
 		this.app.use(express.json());

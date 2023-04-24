@@ -30,7 +30,7 @@ export const get_users = (): object => {
 	});
 };
 
-export const autorisation = (body: any, date: any): any => {
+export const autorisation = (body: any, date: any, token: any): any => {
 	console.log(date);
 	return new Promise((resolve, reject) => {
 		pool.query(
@@ -40,18 +40,19 @@ export const autorisation = (body: any, date: any): any => {
 					console.log(err);
 					return reject(err);
 				} else {
-					// console.log(result.rows.toString());
+					console.log(result.rows.toString());
 					if (result.rows.toString() == '') {
-						return resolve({ success: false });
+						return resolve({ success: false, message: 'Неверный логин или пароль' });
 					} else {
 						pool.query(
-							`UPDATE users SET last_online_date = '${date}' WHERE login = '${body.login}' AND password = '${body.password}'; `,
+							`UPDATE users SET last_online_date = '${date}' WHERE login = '${body.login}' AND password = '${body.password}';
+							UPDATE users SET token = '${token}' WHERE login = '${body.login}' AND password = '${body.password}' `,
 							(err, result) => {
 								if (err) {
 									console.log(err);
 								} else {
 									// console.log(`Yes Online ${date}`);
-									return resolve({ success: true });
+									return resolve({ token: token });
 								}
 							},
 						);
@@ -59,6 +60,34 @@ export const autorisation = (body: any, date: any): any => {
 				}
 			},
 		);
+	});
+};
+export const autorisation_1 = (token: any, date: any): any => {
+	console.log(date);
+	return new Promise((resolve, reject) => {
+		pool.query(`SELECT * FROM users WHERE token = '${token}';`, (err, result) => {
+			if (err) {
+				console.log(err);
+				return reject(err);
+			} else {
+				// console.log(result.rows.toString());
+				if (result.rows.toString() == '') {
+					return resolve({ success: false, message: 'Неверный токен' });
+				} else {
+					pool.query(
+						`UPDATE users SET last_online_date = '${date}' WHERE token = '${token}';`,
+						(err, result) => {
+							if (err) {
+								console.log(err);
+							} else {
+								// console.log(`Yes Online ${date}`);
+								return resolve({ success: true });
+							}
+						},
+					);
+				}
+			}
+		});
 	});
 };
 // INSERT INTO currencies (currency_full_name, name_eng, short_name, short_name_eng, icon, exchange) VALUES ('Доллар', 'Dollar','Долл','Doll','mkmkmkmkmk','79.5');
@@ -69,6 +98,19 @@ export const autorisation = (body: any, date: any): any => {
 export const get_currencies = (): object => {
 	return new Promise((resolve, reject) => {
 		pool.query('SELECT * FROM currencies;', (err, result) => {
+			if (err) {
+				return reject(err);
+			} else {
+				console.log(result.rows, 'yes');
+				return resolve(result.rows);
+			}
+		});
+	});
+};
+
+export const get_currencies_for_id = (id: number): object => {
+	return new Promise((resolve, reject) => {
+		pool.query(`SELECT * FROM currencies WHERE currency_id = ${id};`, (err, result) => {
 			if (err) {
 				return reject(err);
 			} else {
@@ -92,17 +134,49 @@ export const get_countries = (): object => {
 	});
 };
 
-export const operationSave = (body: any, date_start: any): Promise<any> => {
+export const get_countries_fo_id = (id: number): object => {
+	return new Promise((resolve, reject) => {
+		pool.query(`SELECT * FROM countries WHERE country_id = ${id};`, (err, result) => {
+			if (err) {
+				reject(err);
+			} else {
+				// console.log(result.rows);
+				return resolve(result.rows);
+			}
+		});
+	});
+};
+
+export const uId = (token: string): Promise<any> => {
+	const sql = `SELECT user_id FROM users WHERE token = '${token}'`;
+	return new Promise((resolve, reject) => {
+		pool.query(sql, (err, res) => {
+			if (err) {
+				console.log(err);
+			} else {
+				return resolve(res.rows[0]);
+			}
+		});
+	});
+};
+
+export const operationSave = async (
+	body: any,
+	date_start: any,
+	status_id: number,
+): Promise<any> => {
+	const id = await uId(body.token);
+	console.log(id);
 	// return new Promise((resolve, reject) => {
-	const sql = `INSERT INTO transations (user_id, country_id, currency_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id) VALUES ('${body.UsersId}', '${body.Country_id}', '${body.Currency_id}',  '${body.RecipientCardNumber}',  '${body.SumOfTransaction}', '${body.SumOfTransInCurrency}',  '${body.CurrencyEchangeRateToTether}', '${date_start}',1);`;
+	const sql = `INSERT INTO transations (user_id, country_id, currency_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id) VALUES ('${id.user_id}', '${body.Country_id}', '${body.Currency_id}',  '${body.RecipientCardNumber}',  '${body.SumOfTransaction}', '${body.SumOfTransInCurrency}',  '${body.CurrencyEchangeRateToTether}', '${date_start}', ${status_id}) RETURNING transation_id;`;
 	console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, (err, result) => {
 			if (err) {
 				return reject(err);
 			} else {
-				console.log(result);
-				return resolve({ succes: true });
+				console.log(result.rows);
+				return resolve({ transation: result.rows[0].transation_id, success: true });
 			}
 		});
 	});
@@ -115,15 +189,16 @@ const getTransStatus = (id: number): Promise<string> => {
 			if (err) {
 				return reject(err);
 			} else {
-				console.log(result.rows[0]);
+				// console.log(result.rows[0]);
 				return resolve(result.rows[0].status_name);
 			}
 		});
 	});
 };
 
-export const operationList = (id: number): Promise<any> => {
-	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${id}'`;
+export const operationList = async (token: string): Promise<any> => {
+	const id = await uId(token);
+	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${id.user_id}'`;
 	console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, async (err, result) => {
@@ -139,8 +214,28 @@ export const operationList = (id: number): Promise<any> => {
 	});
 };
 
-export const checkPayStatys = (id: number, uId: number): Promise<any> => {
-	const sql = `SELECT status_id FROM transations WHERE transation_id = '${id}' AND user_Id = ${uId}`;
+export const usr_operation_for_id = async (id: number, token: string): Promise<any> => {
+	const Uid = await uId(token);
+	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${Uid.user_id}' AND transation_id = ${id}`;
+	console.log(sql);
+	return new Promise((resolve, reject) => {
+		pool.query(sql, async (err, result) => {
+			if (err) {
+				return reject(err);
+			} else {
+				const Status = await getTransStatus(result.rows[0].status_id);
+				delete result.rows[0].status_id;
+				result.rows[0].status = Status;
+				// console.log(result.rows[0]);
+				return resolve(result.rows);
+			}
+		});
+	});
+};
+
+export const checkPayStatys = async (id: number, token: string): Promise<any> => {
+	const uid = await uId(token);
+	const sql = `SELECT status_id FROM transations WHERE transation_id = '${id}' AND user_Id = ${uid.user_id}`;
 	return new Promise((resolve, reject) => {
 		pool.query(sql, async (err, result) => {
 			if (err) {
@@ -153,8 +248,13 @@ export const checkPayStatys = (id: number, uId: number): Promise<any> => {
 	});
 };
 
-export const transConfirm = (id: number, uId: number): Promise<string> => {
-	const sql = `UPDATE transations SET status_id = '3' WHERE status_id = '1' AND user_id = ${uId} AND transation_id = ${id}`;
+export const transConfirm = async (
+	id: number,
+	token: string,
+	status_id: number,
+): Promise<string> => {
+	const uid = await uId(token);
+	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE user_id = ${uid.user_id} AND transation_id = ${id}`;
 	return new Promise((resolve, reject) => {
 		pool.query(sql, (err, res) => {
 			if (err) {

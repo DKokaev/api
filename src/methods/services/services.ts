@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { IService } from '../services/services.interfase';
 import {
 	autorisation,
+	autorisation_1,
 	checkPayStatys,
 	get_countries,
 	get_currencies,
@@ -10,6 +11,7 @@ import {
 	operationSave,
 	transConfirm,
 } from '../database/db';
+import { hash } from 'bcryptjs';
 
 @injectable()
 export class Services implements IService {
@@ -22,12 +24,16 @@ export class Services implements IService {
 	}
 
 	async Login(body: any): Promise<any> {
-		// console.log(await autorisation(body));
+		const salt = process.env.SATL;
+		const token = await hash(body.password, Number(salt));
 		const date = new Date().toISOString();
-		console.log(date, typeof date);
-		return await autorisation(body, date);
+		console.log(date, typeof date, 'token  ' + token);
+		return await autorisation(body, date, token);
 	}
-
+	async Login_1(body: any): Promise<any> {
+		const date = new Date().toISOString();
+		return await autorisation_1(body.token, date);
+	}
 	async Currencies(): Promise<object> {
 		console.log(await get_currencies());
 		return await get_currencies();
@@ -38,24 +44,24 @@ export class Services implements IService {
 	}
 
 	// // Создание запроса на перевод
-	async Pay(body: any, date_start: string): Promise<any> {
-		console.log(body, date_start);
-		return await operationSave(body, date_start);
+	async Pay(body: any, date_start: string, status_id: number): Promise<any> {
+		// console.log(body, date_start);
+		return await operationSave(body, date_start, status_id);
 	}
 
 	// Получение истории переводов
-	async TransList(id: number): Promise<any> {
-		console.log(typeof id);
-		return await operationList(id);
+	async TransList(token: string): Promise<any> {
+		// console.log(typeof token);
+		return await operationList(token);
 	}
 	// Проверка статуса платежа
-	async CheckPayStatys(id: number, uId: number): Promise<any> {
-		return await checkPayStatys(id, uId);
+	async CheckPayStatys(id: number, token: string): Promise<any> {
+		return await checkPayStatys(id, token);
 	}
 
 	//Подтверждение перевода
-	async TransConfirm(id: number, uId: number): Promise<string> {
-		console.log(id, uId);
-		return await transConfirm(id, uId);
+	async TransConfirm(id: number, token: string, status_id: number): Promise<string> {
+		// console.log(id, token);
+		return await transConfirm(id, token, status_id);
 	}
 }
