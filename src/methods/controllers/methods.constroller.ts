@@ -19,11 +19,6 @@ export class MethodsController extends BaseController implements IMethodsControl
 		super(loggerServise);
 		this.bindRoutes([
 			{
-				method: 'get',
-				path: '/main',
-				func: this.Main,
-			},
-			{
 				method: 'post',
 				path: '/login',
 				func: this.Login,
@@ -50,23 +45,15 @@ export class MethodsController extends BaseController implements IMethodsControl
 			},
 			{
 				method: 'post',
-				path: '/status',
-				func: this.CheckPayStatys,
-			},
-			{
-				method: 'post',
 				path: '/statChange',
 				func: this.ConfirmPayStatus,
 			},
+			{
+				method: 'get',
+				path: '/statGet',
+				func: this.get_Status,
+			},
 		]);
-	}
-	async Main(req: Request, res: Response, next: NextFunction): Promise<void> {
-		console.log('Run Main');
-		// const dir = fs.readdir('C:/Users/kokae/Desktop/GENEX/api/files', (res) => console.log(res));
-		// res.sendFile(`../${__dirname}`);
-
-		// console.log(Dir);
-		// res.json(await this.services.Main());
 	}
 
 	async Login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -101,54 +88,47 @@ export class MethodsController extends BaseController implements IMethodsControl
 				{
 					TelegramChatId: `${country[0].telegram_chat_id}`,
 					Country: `${country[0].country_id}`,
-					OperationsID: '1',
+					OperationsID: transation.transation,
 					SumOfTransInCurrency: `${req.body.SumOfTransaction}`,
 					CurrencyOfTrans: `${currency[0].currency_full_name}`,
 					SumOfTether: `${req.body.SumOfTether}`,
 					CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
-					'Card Number': `${req.body.SumOfTransaction}`,
+					'Card Number': `${req.body.RecipientCardNumber}`,
 				},
 			],
 		};
-		// console.log(transation);
-		if (transation.success == true) {
-			res.json({ success: true });
-		} else {
-			res.json({ success: false });
-		}
-		// const send_Pay = async (): Promise<void> => {
-		// 	axios.post('http://162.55.190.16:5000', data).then((result: any) => {
-		// 		// 		Пример API запроса из Бота:
-		// 		// {
-		// 		// "data": [{
-		// 		// "OperationsID": "AA001",
-		// 		// "ProviderID": "98159148",
-		// 		// "Status": "Ожидает подтверждения"
-		// 		// }]
-		// 		// }
-		// 		if (result[0].Status == 'Ожидает подтверждения') {
-		// 			this.services.TransConfirm(transation, req.body.token, 2);
-		// 			res.json({ status: 'Ожидает подтверждения' });
-		// 		}
-		// 		if (result[0].Status == 'Отменен') {
-		// 			this.services.TransConfirm(transation, req.body.token, 4);
-		// 			res.json({ status: 'Отменен' });
-		// 		}
-		// 	});
-		// };
+		axios.post(String(process.env.BOT_URL), data);
+		console.log(transation, data);
+		// if (transation.success == true) {
+		// 	res.json({ success: true });
+		// } else {
+		// 	res.json({ success: false });
+		// }
 	}
+	//Получение статуса из бота
+	get_Status = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		// 		Пример API запроса из Бота:
+		// {
+		// "data": [{
+		// "OperationsID": "AA001",
+		// "ProviderID": "98159148",
+		// "Status": "Ожидает подтверждения"
+		// }]
+		// }
+		if (req.body.data[0].Status == 'Ожидает подтверждения') {
+			this.services.TransConfirm(req.body.data[0].OperationsID, req.body.token, 2);
+			res.json({ status: 'Ожидает подтверждения' });
+		}
+		if (req.body.data[0].Status == 'Отменен') {
+			this.services.TransConfirm(req.body.data[0].OperationsID, req.body.token, 4);
+			res.json({ status: 'Отменен' });
+		}
+	};
 
 	// Получение истории переводов
 	async TransList(req: Request, res: Response, next: NextFunction): Promise<any> {
-		// console.log(req.query);
 		const total = await this.services.TransList(String(req.query.token));
 		res.json(total);
-	}
-
-	// Запрос на проверку статуса платежа
-	async CheckPayStatys(req: Request, res: Response, next: NextFunction): Promise<any> {
-		// axios.get('http://162.55.190.16:5000/').then((result) => console.log(result));
-		res.send(await this.services.CheckPayStatys(req.body.id, req.body.UserId));
 	}
 
 	// Запрос на подтверждение перевода
@@ -166,8 +146,10 @@ export class MethodsController extends BaseController implements IMethodsControl
 				},
 			],
 		};
-		// console.log(data, transation);
-		// axios.post('http://162.55.190.16:5000/', data).then((result) => console.log(result));
-		res.send(await this.services.TransConfirm(req.body.id, req.body.token, 3));
+		console.log(data, transation);
+		axios
+			.post(String(process.env.BOT_URL), data)
+			.then(async () => res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3)));
+		// res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3));
 	}
 }

@@ -3,7 +3,6 @@ import { IService } from '../services/services.interfase';
 import {
 	autorisation,
 	autorisation_1,
-	checkPayStatys,
 	get_countries,
 	get_currencies,
 	get_users,
@@ -53,10 +52,6 @@ export class Services implements IService {
 	async TransList(token: string): Promise<any> {
 		// console.log(typeof token);
 		return await operationList(token);
-	}
-	// Проверка статуса платежа
-	async CheckPayStatys(id: number, token: string): Promise<any> {
-		return await checkPayStatys(id, token);
 	}
 
 	//Подтверждение перевода

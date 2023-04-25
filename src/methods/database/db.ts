@@ -233,35 +233,17 @@ export const usr_operation_for_id = async (id: number, token: string): Promise<a
 	});
 };
 
-export const checkPayStatys = async (id: number, token: string): Promise<any> => {
+export const transConfirm = async (id: number, token: string, status_id: number): Promise<any> => {
 	const uid = await uId(token);
-	const sql = `SELECT status_id FROM transations WHERE transation_id = '${id}' AND user_Id = ${uid.user_id}`;
-	return new Promise((resolve, reject) => {
-		pool.query(sql, async (err, result) => {
-			if (err) {
-				return reject(err);
-			} else {
-				const Status = await getTransStatus(result.rows[0].status_id);
-				return resolve(Status);
-			}
-		});
-	});
-};
-
-export const transConfirm = async (
-	id: number,
-	token: string,
-	status_id: number,
-): Promise<string> => {
-	const uid = await uId(token);
-	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE user_id = ${uid.user_id} AND transation_id = ${id}`;
-	return new Promise((resolve, reject) => {
-		pool.query(sql, (err, res) => {
-			if (err) {
-				return reject(err);
-			} else {
-				return resolve('succes');
-			}
-		});
-	});
+	console.log(uid);
+	// const sql = `UPDATE transations SET status_id = '${status_id}' WHERE user_id = ${uid.user_id} AND transation_id = ${id}`;
+	// return new Promise((resolve, reject) => {
+	// 	pool.query(sql, (err, res) => {
+	// 		if (err) {
+	// 			return reject(err);
+	// 		} else {
+	// 			return resolve('success');
+	// 		}
+	// 	});
+	// });
 };
