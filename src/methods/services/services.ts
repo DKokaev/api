@@ -5,10 +5,11 @@ import {
 	autorisation_1,
 	get_countries,
 	get_currencies,
-	get_users,
 	operationList,
 	operationSave,
 	transConfirm,
+	transStatus,
+	updProv,
 } from '../database/db';
 import { hash } from 'bcryptjs';
 
@@ -16,11 +17,6 @@ import { hash } from 'bcryptjs';
 export class Services implements IService {
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	constructor() {}
-
-	async Main(): Promise<object> {
-		// console.log(await get_users());
-		return await get_users();
-	}
 
 	async Login(body: any): Promise<any> {
 		const salt = process.env.SATL;
@@ -55,8 +51,23 @@ export class Services implements IService {
 	}
 
 	//Подтверждение перевода
-	async TransConfirm(id: number, token: string, status_id: number): Promise<string> {
+	async TransStatus(id: number, status_id: number, providerid: string): Promise<any> {
 		// console.log(id, token);
+		const provider = await updProv(id, providerid);
+		return await transStatus(id, status_id);
+	}
+
+	//Подтверждение перевода
+	async TransConfirm(
+		id: number,
+		token: string,
+		status_id: number,
+		providerid?: string,
+	): Promise<string> {
+		// console.log(id, token);
+		if (providerid != null) {
+			const provider = await updProv(id, providerid);
+		}
 		return await transConfirm(id, token, status_id);
 	}
 }

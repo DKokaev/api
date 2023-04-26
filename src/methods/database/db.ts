@@ -17,19 +17,6 @@ const pool = new Pool({
 	database: process.env.DB_NAME,
 });
 
-export const get_users = (): object => {
-	return new Promise((resolve, reject) => {
-		pool.query('SELECT * FROM users;', (err, result) => {
-			if (err) {
-				reject(err);
-			} else {
-				// console.log(result.rows);
-				resolve(result.rows);
-			}
-		});
-	});
-};
-
 export const autorisation = (body: any, date: any, token: any): any => {
 	console.log(date);
 	return new Promise((resolve, reject) => {
@@ -154,7 +141,22 @@ export const uId = (token: string): Promise<any> => {
 			if (err) {
 				console.log(err);
 			} else {
+				console.log(res);
 				return resolve(res.rows[0]);
+			}
+		});
+	});
+};
+
+export const updProv = (id: number, providerid: string | undefined): Promise<any> => {
+	const sql = `UPDATE transations SET providerid = '${providerid}' WHERE transation_id = '${id}'`;
+	return new Promise((resolve, reject) => {
+		pool.query(sql, (err, result) => {
+			if (err) {
+				return reject(err);
+			} else {
+				// console.log(result.rows[0]);
+				return resolve({ success: true });
 			}
 		});
 	});
@@ -216,7 +218,7 @@ export const operationList = async (token: string): Promise<any> => {
 
 export const usr_operation_for_id = async (id: number, token: string): Promise<any> => {
 	const Uid = await uId(token);
-	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${Uid.user_id}' AND transation_id = ${id}`;
+	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id, providerid FROM transations WHERE user_id = '${Uid.user_id}' AND transation_id = ${id}`;
 	console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, async (err, result) => {
@@ -237,6 +239,19 @@ export const transConfirm = async (id: number, token: string, status_id: number)
 	const uid = await uId(token);
 	console.log(uid);
 	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE user_id = ${uid.user_id} AND transation_id = ${id}`;
+	return new Promise((resolve, reject) => {
+		pool.query(sql, (err, res) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve('success');
+			}
+		});
+	});
+};
+
+export const transStatus = async (id: number, status_id: number): Promise<any> => {
+	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE transation_id = ${id}`;
 	return new Promise((resolve, reject) => {
 		pool.query(sql, (err, res) => {
 			if (err) {

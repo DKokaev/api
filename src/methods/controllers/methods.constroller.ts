@@ -84,26 +84,35 @@ export class MethodsController extends BaseController implements IMethodsControl
 		const currency: any = await get_currencies_for_id(Number(req.body.Currency_id));
 		// 		Пример API запроса в бот:
 		const data = {
-			data: [
-				{
-					TelegramChatId: `${country[0].telegram_chat_id}`,
-					Country: `${country[0].country_id}`,
-					OperationsID: transation.transation,
-					SumOfTransInCurrency: `${req.body.SumOfTransaction}`,
-					CurrencyOfTrans: `${currency[0].currency_full_name}`,
-					SumOfTether: `${req.body.SumOfTether}`,
-					CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
-					'Card Number': `${req.body.RecipientCardNumber}`,
-				},
-			],
+			TelegramChatId: `${country[0].telegram_chat_id}`,
+			Country: `${country[0].country_full_name}`,
+			OperationsID: transation.transation,
+			SumOfTransInCurrency: `${req.body.SumOfTransaction}`,
+			CurrencyOfTrans: `${currency[0].currency_full_name}`,
+			SumOfTether: `${req.body.SumOfTether}`,
+			CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
+			Card_Number: `${req.body.RecipientCardNumber}`,
 		};
-		axios.post(String(process.env.BOT_URL), data);
-		console.log(transation, data);
-		// if (transation.success == true) {
-		// 	res.json({ success: true });
-		// } else {
-		// 	res.json({ success: false });
-		// }
+
+		// const data = {
+		// 	TelegramChatId: '-1001951668017',
+		// 	Country: '????Турция',
+		// 	OperationsID: 'AA004',
+		// 	SumOfTransInCurrency: '100',
+		// 	CurrencyOfTrans: 'TL',
+		// 	SumOfTether: '5',
+		// 	CurrencyEchangeRateToTether: '19,12',
+		// 	CardNumber: '1234134097512451',
+		// };
+		const total = await axios
+			.post(String(process.env.BOT_URL), data, {
+				headers: {
+					'api-key': '13f4217gyDSA21tS',
+					'Content-Type': 'application/json',
+				},
+			})
+			.then((res) => console.log(res));
+		console.log(transation, data, country, currency);
 	}
 	//Получение статуса из бота
 	get_Status = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -115,12 +124,12 @@ export class MethodsController extends BaseController implements IMethodsControl
 		// "Status": "Ожидает подтверждения"
 		// }]
 		// }
-		if (req.body.data[0].Status == 'Ожидает подтверждения') {
-			this.services.TransConfirm(req.body.data[0].OperationsID, req.body.token, 2);
+		if (req.body.Status == 'Ожидает подтверждения') {
+			this.services.TransStatus(req.body.OperationsID, 2, req.body.ProviderID);
 			res.json({ status: 'Ожидает подтверждения' });
 		}
-		if (req.body.data[0].Status == 'Отменен') {
-			this.services.TransConfirm(req.body.data[0].OperationsID, req.body.token, 4);
+		if (req.body.Status == 'Отменен') {
+			this.services.TransStatus(req.body.OperationsID, 4, req.body.ProviderID);
 			res.json({ status: 'Отменен' });
 		}
 	};
@@ -136,19 +145,15 @@ export class MethodsController extends BaseController implements IMethodsControl
 		const transation = await usr_operation_for_id(req.body.id, req.body.token);
 		// 		Пример API запрос в Бот:
 		const data = {
-			data: [
-				{
-					OperationsID: `${req.body.id}`,
-					ProviderID: '98159148',
-					SumOfTether: `${transation[0].sum_rub}`,
-					CryptoWalletNumber: `${transation[0].card_number}`,
-					Status: 'Выполнен',
-				},
-			],
+			OperationsID: `${req.body.id}`,
+			ProviderID: `${transation.providerid}`,
+			SumOfTether: `${transation[0].sum_rub}`,
+			CryptoWalletNumber: `${transation[0].card_number}`,
+			Status: 'Выполнен',
 		};
 		console.log(data, transation);
-		axios
-			.post(String(process.env.BOT_URL), data)
+		const total = await axios
+			.post(String(process.env.FINISH_BOT_URL), data)
 			.then(async () => res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3)));
 		// res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3));
 	}
