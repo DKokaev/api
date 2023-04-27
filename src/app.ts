@@ -26,8 +26,8 @@ export class App {
 		this.app = express();
 		this.app.use(fileUpload());
 		this.app.use(express.static('files'));
-		this.port = 8080;
-		this.host = '192.168.0.45';
+		this.port = Number(process.env.APP_PORT);
+		this.host = 'localhost';
 		this.app.use(express.json());
 		this.app.use(bodyParser.urlencoded({ extended: true }));
 		this.app.use(
