@@ -15,9 +15,6 @@ import { hash } from 'bcryptjs';
 
 @injectable()
 export class Services implements IService {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	constructor() {}
-
 	async Login(body: any): Promise<any> {
 		const salt = process.env.SATL;
 		const token = await hash(body.password, Number(salt));
@@ -40,19 +37,16 @@ export class Services implements IService {
 
 	// // Создание запроса на перевод
 	async Pay(body: any, date_start: string, status_id: number): Promise<any> {
-		// console.log(body, date_start);
 		return await operationSave(body, date_start, status_id);
 	}
 
 	// Получение истории переводов
 	async TransList(token: string): Promise<any> {
-		// console.log(typeof token);
 		return await operationList(token);
 	}
 
 	//Подтверждение перевода
 	async TransStatus(id: number, status_id: number, providerid: string): Promise<any> {
-		// console.log(id, token);
 		const provider = await updProv(id, providerid);
 		return await transStatus(id, status_id);
 	}
@@ -64,7 +58,6 @@ export class Services implements IService {
 		status_id: number,
 		providerid?: string,
 	): Promise<string> {
-		// console.log(id, token);
 		if (providerid != null) {
 			const provider = await updProv(id, providerid);
 		}

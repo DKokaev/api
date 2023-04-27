@@ -3,12 +3,10 @@ import { ILogger } from '../../logger/logger.interface';
 import { TYPES } from '../../TYPES';
 import { IMethodsController } from './methods.controller.interface';
 import { BaseController } from '../../common/base.controller';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response, response } from 'express';
 import { IService } from '../services/services.interfase';
 import axios from 'axios';
 import { get_countries_fo_id, get_currencies_for_id, usr_operation_for_id } from '../database/db';
-
-const dir = 'files/';
 
 @injectable()
 export class MethodsController extends BaseController implements IMethodsController {
@@ -82,7 +80,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 		const transation: any = await this.services.Pay(req.body, date_start, 1);
 		const country: any = await get_countries_fo_id(Number(req.body.Country_id));
 		const currency: any = await get_currencies_for_id(Number(req.body.Currency_id));
-		// 		Пример API запроса в бот:
+
 		const data = {
 			TelegramChatId: `${country[0].telegram_chat_id}`,
 			Country: `${country[0].country_full_name}`,
@@ -91,39 +89,29 @@ export class MethodsController extends BaseController implements IMethodsControl
 			CurrencyOfTrans: `${currency[0].currency_full_name}`,
 			SumOfTether: `${req.body.SumOfTether}`,
 			CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
-			Card_Number: `${req.body.RecipientCardNumber}`,
+			CardNumber: `${req.body.RecipientCardNumber}`,
 		};
 
-		// const data = {
-		// 	TelegramChatId: '-1001951668017',
-		// 	Country: '????Турция',
-		// 	OperationsID: 'AA004',
-		// 	SumOfTransInCurrency: '100',
-		// 	CurrencyOfTrans: 'TL',
-		// 	SumOfTether: '5',
-		// 	CurrencyEchangeRateToTether: '19,12',
-		// 	CardNumber: '1234134097512451',
-		// };
-		const total = await axios
-			.post(String(process.env.BOT_URL), data, {
-				headers: {
-					'api-key': '13f4217gyDSA21tS',
-					'Content-Type': 'application/json',
-				},
-			})
-			.then((res) => console.log(res));
-		console.log(transation, data, country, currency);
+		const total = new Promise((resolve, reject) => {
+			axios
+				.post(String(process.env.BOT_URL), data, {
+					headers: {
+						'api-key': '13f4217gyDSA21tS',
+						'Content-Type': 'application/json',
+					},
+				})
+				.then((data) => {
+					console.log(data);
+					return data;
+				})
+				.catch((error: Error) => {
+					console.log(error);
+					return error.message;
+				});
+		});
 	}
 	//Получение статуса из бота
 	get_Status = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-		// 		Пример API запроса из Бота:
-		// {
-		// "data": [{
-		// "OperationsID": "AA001",
-		// "ProviderID": "98159148",
-		// "Status": "Ожидает подтверждения"
-		// }]
-		// }
 		if (req.body.Status == 'Ожидает подтверждения') {
 			this.services.TransStatus(req.body.OperationsID, 2, req.body.ProviderID);
 			res.json({ status: 'Ожидает подтверждения' });
@@ -143,7 +131,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 	// Запрос на подтверждение перевода
 	async ConfirmPayStatus(req: Request, res: Response, next: NextFunction): Promise<any> {
 		const transation = await usr_operation_for_id(req.body.id, req.body.token);
-		// 		Пример API запрос в Бот:
+
 		const data = {
 			OperationsID: `${req.body.id}`,
 			ProviderID: `${transation.providerid}`,
@@ -151,10 +139,10 @@ export class MethodsController extends BaseController implements IMethodsControl
 			CryptoWalletNumber: `${transation[0].card_number}`,
 			Status: 'Выполнен',
 		};
-		console.log(data, transation);
+		// console.log(data, transation);
 		const total = await axios
 			.post(String(process.env.FINISH_BOT_URL), data)
-			.then(async () => res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3)));
-		// res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3));
+			.then(async () => res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3)))
+			.catch((error: Error) => res.json(error.message));
 	}
 }

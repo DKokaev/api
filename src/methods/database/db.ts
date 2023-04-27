@@ -168,8 +168,7 @@ export const operationSave = async (
 	status_id: number,
 ): Promise<any> => {
 	const id = await uId(body.token);
-	console.log(id);
-	// return new Promise((resolve, reject) => {
+
 	const sql = `INSERT INTO transations (user_id, country_id, currency_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id) VALUES ('${id.user_id}', '${body.Country_id}', '${body.Currency_id}',  '${body.RecipientCardNumber}',  '${body.SumOfTransaction}', '${body.SumOfTransInCurrency}',  '${body.CurrencyEchangeRateToTether}', '${date_start}', ${status_id}) RETURNING transation_id;`;
 	console.log(sql);
 	return new Promise((resolve, reject) => {
@@ -191,7 +190,6 @@ const getTransStatus = (id: number): Promise<string> => {
 			if (err) {
 				return reject(err);
 			} else {
-				// console.log(result.rows[0]);
 				return resolve(result.rows[0].status_name);
 			}
 		});
@@ -209,7 +207,6 @@ export const operationList = async (token: string): Promise<any> => {
 			} else {
 				const Status = await getTransStatus(result.rows[0].status_id);
 				result.rows[0].status_id = Status;
-				// console.log(result.rows[0]);
 				return resolve(result.rows);
 			}
 		});
@@ -228,7 +225,6 @@ export const usr_operation_for_id = async (id: number, token: string): Promise<a
 				const Status = await getTransStatus(result.rows[0].status_id);
 				delete result.rows[0].status_id;
 				result.rows[0].status = Status;
-				// console.log(result.rows[0]);
 				return resolve(result.rows);
 			}
 		});
