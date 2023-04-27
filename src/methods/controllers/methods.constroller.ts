@@ -102,11 +102,11 @@ export class MethodsController extends BaseController implements IMethodsControl
 				})
 				.then((data) => {
 					console.log(data);
-					return data;
+					res.json(data);
 				})
 				.catch((error: Error) => {
 					console.log(error);
-					return error.message;
+					res.json(error.message);
 				});
 		});
 	}
