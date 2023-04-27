@@ -120,6 +120,10 @@ export class MethodsController extends BaseController implements IMethodsControl
 			this.services.TransStatus(req.body.OperationsID, 4, req.body.ProviderID);
 			res.json({ status: 'Отменен' });
 		}
+		if (req.body.Status == 'Выполнен') {
+			this.services.TransStatus(req.body.OperationsID, 3);
+			res.json('Выполнен');
+		}
 	};
 
 	// Получение истории переводов
@@ -142,7 +146,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 		// console.log(data, transation);
 		const total = await axios
 			.post(String(process.env.FINISH_BOT_URL), data)
-			.then(async () => res.json(await this.services.TransConfirm(req.body.id, req.body.token, 3)))
+			.then((result) => res.json(result.data))
 			.catch((error: Error) => res.json(error.message));
 	}
 }

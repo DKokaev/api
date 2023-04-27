@@ -231,21 +231,6 @@ export const usr_operation_for_id = async (id: number, token: string): Promise<a
 	});
 };
 
-export const transConfirm = async (id: number, token: string, status_id: number): Promise<any> => {
-	const uid = await uId(token);
-	console.log(uid);
-	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE user_id = ${uid.user_id} AND transation_id = ${id}`;
-	return new Promise((resolve, reject) => {
-		pool.query(sql, (err, res) => {
-			if (err) {
-				return reject(err);
-			} else {
-				return resolve('success');
-			}
-		});
-	});
-};
-
 export const transStatus = async (id: number, status_id: number): Promise<any> => {
 	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE transation_id = ${id}`;
 	return new Promise((resolve, reject) => {

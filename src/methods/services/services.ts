@@ -7,7 +7,6 @@ import {
 	get_currencies,
 	operationList,
 	operationSave,
-	transConfirm,
 	transStatus,
 	updProv,
 } from '../database/db';
@@ -46,21 +45,8 @@ export class Services implements IService {
 	}
 
 	//Подтверждение перевода
-	async TransStatus(id: number, status_id: number, providerid: string): Promise<any> {
+	async TransStatus(id: number, status_id: number, providerid?: string | undefined): Promise<any> {
 		const provider = await updProv(id, providerid);
 		return await transStatus(id, status_id);
-	}
-
-	//Подтверждение перевода
-	async TransConfirm(
-		id: number,
-		token: string,
-		status_id: number,
-		providerid?: string,
-	): Promise<string> {
-		if (providerid != null) {
-			const provider = await updProv(id, providerid);
-		}
-		return await transConfirm(id, token, status_id);
 	}
 }

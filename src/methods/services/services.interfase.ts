@@ -5,6 +5,5 @@ export interface IService {
 	Countries: () => object;
 	Pay: (body: any, date_start: string, status_id: number) => any;
 	TransList: (token: string) => object;
-	TransConfirm: (id: number, token: string, status_id: number) => void;
-	TransStatus: (id: number, status_id: number, providerid: string) => void;
+	TransStatus: (id: number, status_id: number, providerid?: string | undefined) => void;
 }
