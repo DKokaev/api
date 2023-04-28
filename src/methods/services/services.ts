@@ -25,11 +25,10 @@ export class Services implements IService {
 		const date = new Date().toISOString();
 		return await autorisation_1(body.token, date);
 	}
-	async Currencies(): Promise<object> {
-		console.log(await get_currencies());
+	async Currencies(): Promise<any> {
 		return await get_currencies();
 	}
-	async Countries(): Promise<object> {
+	async Countries(): Promise<any> {
 		console.log(await get_countries());
 		return await get_countries();
 	}

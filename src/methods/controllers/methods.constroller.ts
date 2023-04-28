@@ -7,6 +7,7 @@ import { NextFunction, Request, Response, response } from 'express';
 import { IService } from '../services/services.interfase';
 import axios from 'axios';
 import { get_countries_fo_id, get_currencies_for_id, usr_operation_for_id } from '../database/db';
+import * as fs from 'fs';
 
 @injectable()
 export class MethodsController extends BaseController implements IMethodsController {
@@ -65,8 +66,8 @@ export class MethodsController extends BaseController implements IMethodsControl
 	}
 
 	async Currencies(req: Request, res: Response, next: NextFunction): Promise<void> {
-		// this.services.Currencies();
-		res.json(await this.services.Currencies());
+		const dir = 'currencies';
+		res.json(this.services.Currencies());
 	}
 
 	async Countries(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -101,8 +102,8 @@ export class MethodsController extends BaseController implements IMethodsControl
 					},
 				})
 				.then((data) => {
-					console.log(data);
-					res.json(data);
+					console.log(data.data);
+					res.json(data.data);
 				})
 				.catch((error: Error) => {
 					console.log(error);
@@ -128,7 +129,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 
 	// Получение истории переводов
 	async TransList(req: Request, res: Response, next: NextFunction): Promise<any> {
-		const total = await this.services.TransList(String(req.query.token));
+		const total = await this.services.TransList(String(req.body.token));
 		res.json(total);
 	}
 
@@ -138,14 +139,14 @@ export class MethodsController extends BaseController implements IMethodsControl
 
 		const data = {
 			OperationsID: `${req.body.id}`,
-			ProviderID: `${transation.providerid}`,
+			ProviderID: `${transation[0].providerid}`,
 			SumOfTether: `${transation[0].sum_rub}`,
 			CryptoWalletNumber: `${transation[0].card_number}`,
 			Status: 'Выполнен',
 		};
 		// console.log(data, transation);
 		const total = await axios
-			.post(String(process.env.FINISH_BOT_URL), data)
+			.post(String(process.env.FINFSH_BOT_URL), data)
 			.then((result) => res.json(result.data))
 			.catch((error: Error) => res.json(error.message));
 	}

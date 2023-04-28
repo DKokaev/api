@@ -88,7 +88,7 @@ export const get_currencies = (): object => {
 			if (err) {
 				return reject(err);
 			} else {
-				console.log(result.rows, 'yes');
+				// console.log(result.rows, 'yes');
 				return resolve(result.rows);
 			}
 		});

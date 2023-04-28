@@ -25,7 +25,7 @@ export class App {
 	) {
 		this.app = express();
 		this.app.use(fileUpload());
-		this.app.use(express.static('files'));
+		this.app.use(express.static(String(process.env.FILES_DIRECTORY)));
 		this.port = Number(process.env.APP_PORT);
 		this.host = 'localhost';
 		this.app.use(express.json());
