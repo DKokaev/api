@@ -205,8 +205,14 @@ export const operationList = async (token: string): Promise<any> => {
 			if (err) {
 				return reject(err);
 			} else {
-				const Status = await getTransStatus(result.rows[0].status_id);
-				result.rows[0].status_id = Status;
+				console.log(result.rows);
+				for (const i in result.rows) {
+					console.log(i);
+					const Status = await getTransStatus(result.rows[i].status_id);
+					delete result.rows[i].status_id;
+					result.rows[i].status = Status;
+					console.log(result.rows[i]);
+				}
 				return resolve(result.rows);
 			}
 		});

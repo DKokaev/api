@@ -67,7 +67,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 
 	async Currencies(req: Request, res: Response, next: NextFunction): Promise<void> {
 		const dir = 'currencies';
-		res.json(this.services.Currencies());
+		res.json(await this.services.Currencies());
 	}
 
 	async Countries(req: Request, res: Response, next: NextFunction): Promise<void> {
