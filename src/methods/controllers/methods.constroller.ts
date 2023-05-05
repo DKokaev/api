@@ -93,7 +93,12 @@ export class MethodsController extends BaseController implements IMethodsControl
 			.then(async (result: any) => {
 				if (result.success) {
 					const date_start: string = new Date().toISOString();
-					const transation: any = await this.services.Pay(req.body, date_start, 1);
+					const transation: any = await this.services.Pay(
+						req.body,
+						date_start,
+						1,
+						req.headers.access_token as string,
+					);
 					const country: any = await get_countries_fo_id(Number(req.body.Country_id));
 					const currency: any = await get_currencies_for_id(Number(req.body.Currency_id));
 
