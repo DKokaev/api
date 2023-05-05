@@ -1,30 +1,72 @@
 import { injectable } from 'inversify';
 import { IService } from '../services/services.interfase';
 import {
-	autorisation,
-	autorisation_1,
+	checkUserForId,
+	getUserIdForLoginPassword,
 	get_countries,
 	get_currencies,
 	operationList,
 	operationSave,
 	transStatus,
 	updProv,
+	updateUsersDate,
 } from '../database/db';
-import { hash } from 'bcryptjs';
+import { sign, verify } from 'jsonwebtoken';
 
 @injectable()
 export class Services implements IService {
-	async Login(body: any): Promise<any> {
-		const salt = process.env.SATL;
-		const token = await hash(body.password, Number(salt));
-		const date = new Date().toISOString();
-		console.log(date, typeof date, 'token  ' + token);
-		return await autorisation(body, date, token);
+	async Login(req: any): Promise<any> {
+		const total = await getUserIdForLoginPassword(req.body).then(async (user: any) => {
+			if (typeof user != 'string') {
+				const data = this.generateAccessJWT(user[0].user_id);
+				const date = new Date().toISOString();
+				updateUsersDate(await data, user[0].user_id, date);
+				// console.log('efefefefefefe', await data);
+				return data;
+			} else {
+				return user;
+			}
+		});
+		return total;
 	}
-	async Login_1(body: any): Promise<any> {
-		const date = new Date().toISOString();
-		return await autorisation_1(body.token, date);
-	}
+
+	generateAccessJWT = async (id: any): Promise<any> => {
+		console.log(id);
+		return new Promise((resolve, reject) => {
+			const accessToken = sign(
+				{ id: id, iat: Math.floor(Date.now() / 1000) },
+				process.env.ACCESS_TOKEN_SECRET as string,
+				{ expiresIn: '10m', algorithm: 'HS256' },
+				(err, token) => {
+					if (err) {
+						return resolve({ error: `${err.message}`, success: false });
+					} else {
+						resolve({ token: token as string, success: true });
+					}
+				},
+			);
+		});
+	};
+
+	JWTverify = async (token: string): Promise<any> => {
+		return new Promise((resolve, reject) => {
+			verify(`${token}`, process.env.ACCESS_TOKEN_SECRET as string, async (err, payload) => {
+				console.log(payload);
+				if (err) {
+					console.log('err.message', err.message);
+					// reject(err.message);
+					resolve({ error: err.message, success: false });
+				} else if (payload) {
+					console.log('payload', payload);
+					const date = new Date().toISOString();
+					const success = await checkUserForId(`${token}`, date);
+					resolve(success);
+					console.log(payload);
+				}
+			});
+		});
+	};
+
 	async Currencies(): Promise<any> {
 		return await get_currencies();
 	}

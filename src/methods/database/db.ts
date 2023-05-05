@@ -17,66 +17,65 @@ const pool = new Pool({
 	database: process.env.DB_NAME,
 });
 
-export const autorisation = (body: any, date: any, token: any): any => {
-	console.log(date);
+export const getUserIdForLoginPassword = (body: any): any => {
 	return new Promise((resolve, reject) => {
 		pool.query(
 			`SELECT * FROM users WHERE login = '${body.login}' AND password = '${body.password}';`,
 			(err, result) => {
 				if (err) {
-					console.log(err);
-					return reject(err);
+					console.log(err.message);
+					return reject(err.message);
 				} else {
-					console.log(result.rows.toString());
-					if (result.rows.toString() == '') {
-						return resolve({ success: false, message: 'Неверный логин или пароль' });
+					console.log(result.rows);
+					if (result.rows.length != 0) {
+						return resolve(result.rows);
 					} else {
-						pool.query(
-							`UPDATE users SET last_online_date = '${date}' WHERE login = '${body.login}' AND password = '${body.password}';
-							UPDATE users SET token = '${token}' WHERE login = '${body.login}' AND password = '${body.password}' `,
-							(err, result) => {
-								if (err) {
-									console.log(err);
-								} else {
-									// console.log(`Yes Online ${date}`);
-									return resolve({ token: token });
-								}
-							},
-						);
+						return resolve('Пользователь не найден');
 					}
 				}
 			},
 		);
 	});
 };
-export const autorisation_1 = (token: any, date: any): any => {
-	console.log(date);
-	return new Promise((resolve, reject) => {
-		pool.query(`SELECT * FROM users WHERE token = '${token}';`, (err, result) => {
+
+export const updateUsersDate = (data: any, id: number, date: string): any => {
+	pool.query(
+		`UPDATE users SET token = '${data.token}' WHERE user_id = '${id}';
+		UPDATE users SET last_online_date = '${date}' WHERE user_id = '${id}'`,
+		(err, result) => {
 			if (err) {
 				console.log(err);
-				return reject(err);
 			} else {
-				// console.log(result.rows.toString());
-				if (result.rows.toString() == '') {
-					return resolve({ success: false, message: 'Неверный токен' });
-				} else {
-					pool.query(
-						`UPDATE users SET last_online_date = '${date}' WHERE token = '${token}';`,
-						(err, result) => {
-							if (err) {
-								console.log(err);
-							} else {
-								// console.log(`Yes Online ${date}`);
-								return resolve({ success: true });
-							}
-						},
-					);
-				}
+				return { success: 'true' };
+			}
+		},
+	);
+};
+
+export const checkUserForId = (token: string, date: string): any => {
+	console.log(token, date);
+	return new Promise((resolve, reject) => {
+		const sql = `SELECT * FROM users WHERE token = '${token}';`;
+
+		pool.query(sql, (err, result) => {
+			if (err) {
+				console.log(err.message);
+				reject(err.message);
+			} else {
+				const sql = `UPDATE users SET last_online_date = '${date}' WHERE token = '${token}';`;
+				pool.query(sql, (err, res) => {
+					if (err) {
+						console.log(err);
+					} else {
+						// console.log(`Yes Online ${date}`);
+						return resolve({ success: true });
+					}
+				});
 			}
 		});
 	});
 };
+
 // INSERT INTO currencies (currency_full_name, name_eng, short_name, short_name_eng, icon, exchange) VALUES ('Доллар', 'Dollar','Долл','Doll','mkmkmkmkmk','79.5');
 // INSERT INTO status (status_id, status_name) VALUES (1, 'В обработке');
 //INSERT INTO status (status_id, status_name) VALUES (2,'Ожидает подтверждения');

@@ -6,7 +6,6 @@ import { ILogger } from './logger/logger.interface';
 import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import 'reflect-metadata';
-import { IMethodsController } from './methods/controllers/methods.controller.interface';
 import { MethodsController } from './methods/controllers/methods.constroller';
 import bodyParser from 'body-parser';
 import { IExeptionFilter } from './errors/exeption.filter.interface';
