@@ -3,7 +3,7 @@ import { ILogger } from '../../logger/logger.interface';
 import { TYPES } from '../../TYPES';
 import { IMethodsController } from './methods.controller.interface';
 import { BaseController } from '../../common/base.controller';
-import { NextFunction, Request, Response, response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { IService } from '../services/services.interfase';
 import axios from 'axios';
 import { get_countries_fo_id, get_currencies_for_id, usr_operation_for_id } from '../database/db';
@@ -38,8 +38,8 @@ export class MethodsController extends BaseController implements IMethodsControl
 				func: this.Pay,
 			},
 			{
-				method: 'get',
-				path: '/transList:token?',
+				method: 'post',
+				path: '/transList',
 				func: this.TransList,
 			},
 			{
@@ -48,7 +48,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 				func: this.ConfirmPayStatus,
 			},
 			{
-				method: 'get',
+				method: 'post',
 				path: '/statGet',
 				func: this.get_Status,
 			},
@@ -56,60 +56,79 @@ export class MethodsController extends BaseController implements IMethodsControl
 	}
 
 	async Login(req: Request, res: Response, next: NextFunction): Promise<void> {
-		console.log(req.body);
-		if (req.body.token) {
-			console.log('jjjjjjjjjjjjjjjj');
-			res.json(await this.services.Login_1(req.body));
-		} else {
-			res.json(await this.services.Login(req.body));
-		}
+		res.json(await this.services.Login(req));
 	}
 
 	async Currencies(req: Request, res: Response, next: NextFunction): Promise<void> {
 		const dir = 'currencies';
-		res.json(await this.services.Currencies());
+		const checkToken = await this.services
+			.JWTverify(req.headers.access_token as string)
+			.then(async (result: any) => {
+				if (result.success) {
+					res.json(await this.services.Currencies());
+				} else {
+					res.status(401).json(result);
+				}
+			});
 	}
 
 	async Countries(req: Request, res: Response, next: NextFunction): Promise<void> {
 		// this.services.Countries();
-		res.json(await this.services.Countries());
+		const checkToken = await this.services
+			.JWTverify(req.headers.access_token as string)
+			.then(async (result: any) => {
+				if (result.success) {
+					res.json(await this.services.Countries());
+				} else {
+					res.status(401).json(result);
+				}
+			});
+		// res.json(await this.services.Countries());
 	}
 
 	// // Создание запроса на платеж
 	async Pay(req: Request, res: Response, next: NextFunction): Promise<any> {
-		const date_start: string = new Date().toISOString();
-		const transation: any = await this.services.Pay(req.body, date_start, 1);
-		const country: any = await get_countries_fo_id(Number(req.body.Country_id));
-		const currency: any = await get_currencies_for_id(Number(req.body.Currency_id));
+		const checkToken = await this.services
+			.JWTverify(req.headers.access_token as string)
+			.then(async (result: any) => {
+				if (result.success) {
+					const date_start: string = new Date().toISOString();
+					const transation: any = await this.services.Pay(req.body, date_start, 1);
+					const country: any = await get_countries_fo_id(Number(req.body.Country_id));
+					const currency: any = await get_currencies_for_id(Number(req.body.Currency_id));
 
-		const data = {
-			TelegramChatId: `${country[0].telegram_chat_id}`,
-			Country: `${country[0].country_full_name}`,
-			OperationsID: transation.transation,
-			SumOfTransInCurrency: `${req.body.SumOfTransaction}`,
-			CurrencyOfTrans: `${currency[0].currency_full_name}`,
-			SumOfTether: `${req.body.SumOfTether}`,
-			CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
-			CardNumber: `${req.body.RecipientCardNumber}`,
-		};
+					const data = {
+						TelegramChatId: `${country[0].telegram_chat_id}`,
+						Country: `${country[0].country_full_name}`,
+						OperationsID: transation.transation,
+						SumOfTransInCurrency: `${req.body.SumOfTransaction}`,
+						CurrencyOfTrans: `${currency[0].currency_full_name}`,
+						SumOfTether: `${req.body.SumOfTether}`,
+						CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
+						CardNumber: `${req.body.RecipientCardNumber}`,
+					};
 
-		const total = new Promise((resolve, reject) => {
-			axios
-				.post(String(process.env.BOT_URL), data, {
-					headers: {
-						'api-key': '13f4217gyDSA21tS',
-						'Content-Type': 'application/json',
-					},
-				})
-				.then((data) => {
-					console.log(data.data);
-					res.json(data.data);
-				})
-				.catch((error: Error) => {
-					console.log(error);
-					res.json(error.message);
-				});
-		});
+					const total = new Promise((resolve, reject) => {
+						axios
+							.post(String(process.env.BOT_URL), data, {
+								headers: {
+									'api-key': '13f4217gyDSA21tS',
+									'Content-Type': 'application/json',
+								},
+							})
+							.then((data) => {
+								console.log(data.data);
+								res.json(data.data);
+							})
+							.catch((error: Error) => {
+								console.log(error);
+								res.json(error.message);
+							});
+					});
+				} else {
+					res.status(401).json(result);
+				}
+			});
 	}
 	//Получение статуса из бота
 	get_Status = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -123,31 +142,49 @@ export class MethodsController extends BaseController implements IMethodsControl
 		}
 		if (req.body.Status == 'Выполнен') {
 			this.services.TransStatus(req.body.OperationsID, 3);
-			res.json('Выполнен');
+			res.json({ status: 'Выполнен' });
 		}
 	};
 
 	// Получение истории переводов
 	async TransList(req: Request, res: Response, next: NextFunction): Promise<any> {
-		const total = await this.services.TransList(String(req.body.token));
-		res.json(total);
+		const checkToken = await this.services
+			.JWTverify(req.headers.access_token as string)
+			.then(async (result: any) => {
+				if (result.success) {
+					res.json(await this.services.TransList(String(req.headers.access_token as string)));
+				} else {
+					res.status(401).json(result);
+				}
+			});
 	}
 
 	// Запрос на подтверждение перевода
 	async ConfirmPayStatus(req: Request, res: Response, next: NextFunction): Promise<any> {
-		const transation = await usr_operation_for_id(req.body.id, req.body.token);
+		const checkToken = await this.services
+			.JWTverify(req.headers.access_token as string)
+			.then(async (result: any) => {
+				if (result.success) {
+					const transation = await usr_operation_for_id(
+						req.body.id,
+						req.headers.access_token as string,
+					);
 
-		const data = {
-			OperationsID: `${req.body.id}`,
-			ProviderID: `${transation[0].providerid}`,
-			SumOfTether: `${transation[0].sum_rub}`,
-			CryptoWalletNumber: `${transation[0].card_number}`,
-			Status: 'Выполнен',
-		};
-		// console.log(data, transation);
-		const total = await axios
-			.post(String(process.env.FINFSH_BOT_URL), data)
-			.then((result) => res.json(result.data))
-			.catch((error: Error) => res.json(error.message));
+					const data = {
+						OperationsID: `${req.body.id}`,
+						ProviderID: `${transation[0].providerid}`,
+						SumOfTether: `${transation[0].sum_rub}`,
+						CryptoWalletNumber: `${transation[0].card_number}`,
+						Status: 'Выполнен',
+					};
+					// console.log(data, transation);
+					const total = await axios
+						.post(String(process.env.FINFSH_BOT_URL), data)
+						.then((result) => res.json(result.data))
+						.catch((error: Error) => res.json(error.message));
+				} else {
+					res.status(401).json(result);
+				}
+			});
 	}
 }
