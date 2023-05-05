@@ -76,8 +76,8 @@ export class Services implements IService {
 	}
 
 	// // Создание запроса на перевод
-	async Pay(body: any, date_start: string, status_id: number): Promise<any> {
-		return await operationSave(body, date_start, status_id);
+	async Pay(body: any, date_start: string, status_id: number, token: string): Promise<any> {
+		return await operationSave(body, date_start, status_id, token);
 	}
 
 	// Получение истории переводов

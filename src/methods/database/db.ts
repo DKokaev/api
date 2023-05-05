@@ -165,8 +165,9 @@ export const operationSave = async (
 	body: any,
 	date_start: any,
 	status_id: number,
+	token: string,
 ): Promise<any> => {
-	const id = await uId(body.token);
+	const id = await uId(token);
 
 	const sql = `INSERT INTO transations (user_id, country_id, currency_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id) VALUES ('${id.user_id}', '${body.Country_id}', '${body.Currency_id}',  '${body.RecipientCardNumber}',  '${body.SumOfTransaction}', '${body.SumOfTransInCurrency}',  '${body.CurrencyEchangeRateToTether}', '${date_start}', ${status_id}) RETURNING transation_id;`;
 	console.log(sql);
