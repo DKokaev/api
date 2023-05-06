@@ -112,7 +112,7 @@ export class MethodsController extends BaseController implements IMethodsControl
 						CurrencyEchangeRateToTether: `${req.body.CurrencyEchangeRateToTether}`,
 						CardNumber: `${req.body.RecipientCardNumber}`,
 					};
-
+					console.log(data);
 					const total = new Promise((resolve, reject) => {
 						axios
 							.post(String(process.env.BOT_URL), data, {
@@ -144,10 +144,6 @@ export class MethodsController extends BaseController implements IMethodsControl
 		if (req.body.Status == 'Отменен') {
 			this.services.TransStatus(req.body.OperationsID, 4, req.body.ProviderID);
 			res.json({ status: 'Отменен' });
-		}
-		if (req.body.Status == 'Выполнен') {
-			this.services.TransStatus(req.body.OperationsID, 3);
-			res.json({ status: 'Выполнен' });
 		}
 	};
 
@@ -182,10 +178,13 @@ export class MethodsController extends BaseController implements IMethodsControl
 						CryptoWalletNumber: `${transation[0].card_number}`,
 						Status: 'Выполнен',
 					};
+
+					const confTrans = this.services.TransStatus(req.body.id, 3);
+
 					// console.log(data, transation);
 					const total = await axios
 						.post(String(process.env.FINFSH_BOT_URL), data)
-						.then((result) => res.json(result.data))
+						.then((result) => res.json({ success: result.data, status: confTrans }))
 						.catch((error: Error) => res.json(error.message));
 				} else {
 					res.status(401).json(result);

@@ -240,11 +240,12 @@ export const usr_operation_for_id = async (id: number, token: string): Promise<a
 export const transStatus = async (id: number, status_id: number): Promise<any> => {
 	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE transation_id = ${id}`;
 	return new Promise((resolve, reject) => {
-		pool.query(sql, (err, res) => {
+		pool.query(sql, async (err, res) => {
 			if (err) {
 				return reject(err);
 			} else {
-				return resolve('success');
+				const status = await getTransStatus(status_id);
+				return resolve({ success: true, stauts: status });
 			}
 		});
 	});
