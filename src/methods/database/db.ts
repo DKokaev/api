@@ -23,10 +23,10 @@ export const getUserIdForLoginPassword = (body: any): any => {
 			`SELECT * FROM users WHERE login = '${body.login}' AND password = '${body.password}';`,
 			(err, result) => {
 				if (err) {
-					console.log(err.message);
+					// console.log(err.message);
 					return reject(err.message);
 				} else {
-					console.log(result.rows);
+					// console.log(result.rows);
 					if (result.rows.length != 0) {
 						return resolve(result.rows);
 					} else {
@@ -59,13 +59,13 @@ export const checkUserForId = (token: string, date: string): any => {
 
 		pool.query(sql, (err, result) => {
 			if (err) {
-				console.log(err.message);
+				// console.log(err.message);
 				reject(err.message);
 			} else {
 				const sql = `UPDATE users SET last_online_date = '${date}' WHERE token = '${token}';`;
 				pool.query(sql, (err, res) => {
 					if (err) {
-						console.log(err);
+						// console.log(err);
 					} else {
 						// console.log(`Yes Online ${date}`);
 						return resolve({ success: true });
@@ -100,7 +100,7 @@ export const get_currencies_for_id = (id: number): object => {
 			if (err) {
 				return reject(err);
 			} else {
-				console.log(result.rows, 'yes');
+				// console.log(result.rows, 'yes');
 				return resolve(result.rows);
 			}
 		});
@@ -138,9 +138,9 @@ export const uId = (token: string): Promise<any> => {
 	return new Promise((resolve, reject) => {
 		pool.query(sql, (err, res) => {
 			if (err) {
-				console.log(err);
+				// console.log(err);
 			} else {
-				console.log(res);
+				// console.log(res);
 				return resolve(res.rows[0]);
 			}
 		});
@@ -170,13 +170,13 @@ export const operationSave = async (
 	const id = await uId(token);
 
 	const sql = `INSERT INTO transations (user_id, country_id, currency_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id) VALUES ('${id.user_id}', '${body.Country_id}', '${body.Currency_id}',  '${body.RecipientCardNumber}',  '${body.SumOfTransaction}', '${body.SumOfTransInCurrency}',  '${body.CurrencyEchangeRateToTether}', '${date_start}', ${status_id}) RETURNING transation_id;`;
-	console.log(sql);
+	// console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, (err, result) => {
 			if (err) {
 				return reject(err);
 			} else {
-				console.log(result.rows);
+				// console.log(result.rows);
 				return resolve({ transation: result.rows[0].transation_id, success: true });
 			}
 		});
@@ -199,7 +199,7 @@ const getTransStatus = (id: number): Promise<string> => {
 export const operationList = async (token: string): Promise<any> => {
 	const id = await uId(token);
 	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${id.user_id}'`;
-	console.log(sql);
+	// console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, async (err, result) => {
 			if (err) {
@@ -207,11 +207,11 @@ export const operationList = async (token: string): Promise<any> => {
 			} else {
 				console.log(result.rows);
 				for (const i in result.rows) {
-					console.log(i);
+					// console.log(i);
 					const Status = await getTransStatus(result.rows[i].status_id);
 					delete result.rows[i].status_id;
 					result.rows[i].status = Status;
-					console.log(result.rows[i]);
+					// console.log(result.rows[i]);
 				}
 				return resolve(result.rows);
 			}
@@ -220,32 +220,50 @@ export const operationList = async (token: string): Promise<any> => {
 };
 
 export const usr_operation_for_id = async (id: number, token: string): Promise<any> => {
-	const Uid = await uId(token);
-	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id, providerid FROM transations WHERE user_id = '${Uid.user_id}' AND transation_id = ${id}`;
-	console.log(sql);
+	if ((await getTransationForId(id)).length != 0) {
+		console.log('kk');
+		const Uid = await uId(token);
+		const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id, providerid FROM transations WHERE user_id = '${Uid.user_id}' AND transation_id = ${id}`;
+		return new Promise((resolve, reject) => {
+			pool.query(sql, async (err, result) => {
+				if (err) {
+					return resolve(err.message);
+				} else {
+					const Status = await getTransStatus(result.rows[0].status_id);
+					delete result.rows[0].status_id;
+					result.rows[0].status = Status;
+					return resolve({ result: result.rows, success: true });
+				}
+			});
+		});
+	} else {
+		return { error: 'Запись не найдена', success: false };
+	}
+};
+
+export const transStatus = async (id: number, status_id: number): Promise<any> => {
+	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE transation_id = ${id};`;
 	return new Promise((resolve, reject) => {
-		pool.query(sql, async (err, result) => {
+		pool.query(sql, async (err, res) => {
 			if (err) {
-				return reject(err);
+				return resolve(err.message);
 			} else {
-				const Status = await getTransStatus(result.rows[0].status_id);
-				delete result.rows[0].status_id;
-				result.rows[0].status = Status;
-				return resolve(result.rows);
+				const status = await getTransStatus(status_id);
+				return resolve({ success: true, status: status });
 			}
 		});
 	});
 };
 
-export const transStatus = async (id: number, status_id: number): Promise<any> => {
-	const sql = `UPDATE transations SET status_id = '${status_id}' WHERE transation_id = ${id}`;
+const getTransationForId = async (id: number): Promise<any> => {
 	return new Promise((resolve, reject) => {
-		pool.query(sql, async (err, res) => {
+		const sql = `SELECT * FROM transations WHERE transation_id = '${id}';`;
+		pool.query(sql, (err, result) => {
 			if (err) {
+				console.log(err.message);
 				return reject(err);
 			} else {
-				const status = await getTransStatus(status_id);
-				return resolve({ success: true, stauts: status });
+				return resolve(result.rows);
 			}
 		});
 	});

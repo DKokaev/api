@@ -113,23 +113,25 @@ export class MethodsController extends BaseController implements IMethodsControl
 						CardNumber: `${req.body.RecipientCardNumber}`,
 					};
 					console.log(data);
-					const total = new Promise((resolve, reject) => {
-						axios
-							.post(String(process.env.BOT_URL), data, {
-								headers: {
-									'api-key': '13f4217gyDSA21tS',
-									'Content-Type': 'application/json',
-								},
-							})
-							.then((data) => {
-								console.log(data.data);
-								res.json(data.data);
-							})
-							.catch((error: Error) => {
-								console.log(error);
-								res.json(error.message);
-							});
-					});
+					res.json(data);
+
+					// const total = new Promise((resolve, reject) => {
+					// 	axios
+					// 		.post(String(process.env.BOT_URL), data, {
+					// 			headers: {
+					// 				'api-key': '13f4217gyDSA21tS',
+					// 				'Content-Type': 'application/json',
+					// 			},
+					// 		})
+					// 		.then((data) => {
+					// 			console.log(data.data);
+					// 			res.json(data.data);
+					// 		})
+					// 		.catch((error: Error) => {
+					// 			console.log(error);
+					// 			res.json({ error: error.message });
+					// 		});
+					// });
 				} else {
 					res.status(401).json(result);
 				}
@@ -167,26 +169,29 @@ export class MethodsController extends BaseController implements IMethodsControl
 			.JWTverify(req.headers.access_token as string)
 			.then(async (result: any) => {
 				if (result.success) {
+					console.log('token result ', result);
 					const transation = await usr_operation_for_id(
 						req.body.id,
 						req.headers.access_token as string,
 					);
-
-					const data = {
-						OperationsID: `${req.body.id}`,
-						ProviderID: `${transation[0].providerid}`,
-						SumOfTether: `${transation[0].sum_rub}`,
-						CryptoWalletNumber: `${transation[0].card_number}`,
-						Status: 'Выполнен',
-					};
-
-					const confTrans = this.services.TransStatus(req.body.id, 3);
-
-					// console.log(data, transation);
-					const total = await axios
-						.post(String(process.env.FINFSH_BOT_URL), data)
-						.then((result) => res.json({ success: result.data, status: confTrans }))
-						.catch((error: Error) => res.json(error.message));
+					if (transation.success) {
+						const data = {
+							OperationsID: `${req.body.id}`,
+							ProviderID: `${transation.result[0].providerid}`,
+							SumOfTether: `${transation.result[0].sum_rub}`,
+							CryptoWalletNumber: `${transation.result[0].card_number}`,
+							Status: 'Выполнен',
+						};
+						console.log(data);
+						const confTrans = await this.services.TransStatus(req.body.id, 3);
+						console.log(confTrans);
+						const total = await axios
+							.post(String(process.env.FINFSH_BOT_URL), data)
+							.then((result) => res.json({ result: result.data, message: confTrans }))
+							.catch((error: Error) => res.json(error.message));
+					} else {
+						res.json(transation);
+					}
 				} else {
 					res.status(401).json(result);
 				}

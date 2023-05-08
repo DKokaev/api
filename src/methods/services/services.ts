@@ -51,17 +51,17 @@ export class Services implements IService {
 	JWTverify = async (token: string): Promise<any> => {
 		return new Promise((resolve, reject) => {
 			verify(`${token}`, process.env.ACCESS_TOKEN_SECRET as string, async (err, payload) => {
-				console.log(payload);
+				// console.log(payload);
 				if (err) {
-					console.log('err.message', err.message);
+					// console.log('err.message', err.message);
 					// reject(err.message);
 					resolve({ error: err.message, success: false });
 				} else if (payload) {
-					console.log('payload', payload);
+					// console.log('payload', payload);
 					const date = new Date().toISOString();
 					const success = await checkUserForId(`${token}`, date);
 					resolve(success);
-					console.log(payload);
+					// console.log(payload);
 				}
 			});
 		});
@@ -87,7 +87,12 @@ export class Services implements IService {
 
 	//Подтверждение перевода
 	async TransStatus(id: number, status_id: number, providerid?: string | undefined): Promise<any> {
-		const provider = await updProv(id, providerid);
-		return await transStatus(id, status_id);
+		if (providerid != null) {
+			const provider = await updProv(id, providerid);
+			return await transStatus(id, status_id);
+		} else {
+			console.log(1);
+			return await transStatus(id, status_id);
+		}
 	}
 }
