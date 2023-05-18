@@ -94,6 +94,19 @@ export const get_currencies = (): object => {
 	});
 };
 
+export const get_commission = (): any => {
+	return new Promise((resolve, reject) => {
+		pool.query('SELECT * FROM commission;', (err, result) => {
+			if (err) {
+				return reject(err);
+			} else {
+				// console.log(result.rows, 'yes');
+				return resolve(result.rows);
+			}
+		});
+	});
+};
+
 export const get_currencies_for_id = (id: number): object => {
 	return new Promise((resolve, reject) => {
 		pool.query(`SELECT * FROM currencies WHERE currency_id = ${id};`, (err, result) => {
@@ -198,7 +211,7 @@ const getTransStatus = (id: number): Promise<string> => {
 
 export const operationList = async (token: string): Promise<any> => {
 	const id = await uId(token);
-	const sql = `SELECT transation_id, user_id, card_number, sum_rub, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${id.user_id}'`;
+	const sql = `SELECT transation_id, user_id, card_number, sum_rub, currency_id, sum_currency, exchange_rate, date_start, status_id FROM transations WHERE user_id = '${id.user_id}'`;
 	// console.log(sql);
 	return new Promise((resolve, reject) => {
 		pool.query(sql, async (err, result) => {
@@ -208,6 +221,9 @@ export const operationList = async (token: string): Promise<any> => {
 				console.log(result.rows);
 				for (const i in result.rows) {
 					// console.log(i);
+					const Currency: any = await get_currencies_for_id(result.rows[i].currency_id);
+					delete result.rows[i].currency_id;
+					result.rows[i].currency = Currency[0].currency_simbol;
 					const Status = await getTransStatus(result.rows[i].status_id);
 					delete result.rows[i].status_id;
 					result.rows[i].status = Status;

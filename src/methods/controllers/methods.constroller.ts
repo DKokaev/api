@@ -113,25 +113,25 @@ export class MethodsController extends BaseController implements IMethodsControl
 						CardNumber: `${req.body.RecipientCardNumber}`,
 					};
 					console.log(data);
-					res.json(data);
 
-					// const total = new Promise((resolve, reject) => {
-					// 	axios
-					// 		.post(String(process.env.BOT_URL), data, {
-					// 			headers: {
-					// 				'api-key': '13f4217gyDSA21tS',
-					// 				'Content-Type': 'application/json',
-					// 			},
-					// 		})
-					// 		.then((data) => {
-					// 			console.log(data.data);
-					// 			res.json(data.data);
-					// 		})
-					// 		.catch((error: Error) => {
-					// 			console.log(error);
-					// 			res.json({ error: error.message });
-					// 		});
-					// });
+					const total = new Promise((resolve, reject) => {
+						axios
+							.post(String(process.env.BOT_URL), data, {
+								headers: {
+									'api-key': '13f4217gyDSA21tS',
+									'Content-Type': 'application/json',
+								},
+							})
+							.then((data) => {
+								console.log(data.data);
+								res.json(data.data);
+							})
+							.catch((error: Error) => {
+								console.log(error);
+								res.json({ error: error.message });
+							});
+					});
+					res.json(data);
 				} else {
 					res.status(401).json(result);
 				}

@@ -3,6 +3,7 @@ import { IService } from '../services/services.interfase';
 import {
 	checkUserForId,
 	getUserIdForLoginPassword,
+	get_commission,
 	get_countries,
 	get_currencies,
 	operationList,
@@ -68,7 +69,7 @@ export class Services implements IService {
 	};
 
 	async Currencies(): Promise<any> {
-		return await get_currencies();
+		return { currencies: await get_currencies(), commission: await get_commission() };
 	}
 	async Countries(): Promise<any> {
 		console.log(await get_countries());
